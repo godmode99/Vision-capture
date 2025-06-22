@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from datetime import datetime
 
 import pytest
 
@@ -110,3 +111,28 @@ def test_capture_error_handling(tmp_path: Path):
     results = manager.capture_images()
     assert results[1] is not None
     assert results[2] is None
+
+
+def test_latest_image_helpers(tmp_path: Path):
+    cfg = create_config(tmp_path)
+    out_dir = tmp_path / "out"
+    manager = CameraManager(config_path=cfg)
+    manager.connect_all()
+
+    # No capture yet
+    assert manager.get_latest_image(1) is None
+
+    caps = manager.capture_images()
+    img_path = manager.get_latest_image(1)
+    assert img_path == caps[1]
+    assert isinstance(img_path, Path) and img_path.is_file()
+
+    assert manager.get_latest_image(2) == caps[2]
+    with pytest.raises(ValueError):
+        manager.get_latest_image(99)
+
+    fixed_time = datetime(2020, 1, 2, 3, 4, 5)
+    saved = manager.save_latest_image(1, out_dir, serial="SN", status="OK", timestamp=fixed_time)
+    expected = out_dir / "SN_OK_20200102_030405.jpg"
+    assert saved == expected
+    assert saved.is_file()
