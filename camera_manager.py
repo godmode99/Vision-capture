@@ -1,7 +1,7 @@
 """Camera management utilities."""
 
 from __future__ import annotations
-
+import numpy as np
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Union
