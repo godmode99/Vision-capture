@@ -49,6 +49,23 @@ add_mapping("ZZ99", "ModelZ")
 remove_mapping("AB12")
 ```
 
+## Event Logger
+
+Keep a list of events in memory and export or reload them.
+
+```python
+from event_logger import EventLogger
+
+logger = EventLogger("logs/events.txt")
+logger.log_event("info", "started", {"user": "abc"})
+
+logger.save_log_json("events.json")
+logger.save_log_csv("events.csv")
+
+logger.load_log_json("events.json")
+logger.load_log_csv("events.csv")
+```
+
 ## Running Tests
 
 Run the unit tests with:
