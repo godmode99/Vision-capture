@@ -54,3 +54,35 @@ def test_connect_single(tmp_path: Path):
     assert manager.get_camera(2).status == "connected"
     with pytest.raises(ValueError):
         manager.connect_camera(99)
+
+
+def test_check_all_statuses(tmp_path: Path, caplog):
+    cfg = tmp_path / "cfg.json"
+    device = tmp_path / "video0"
+    device.touch()
+    missing = tmp_path / "missing"
+    data = {
+        "autoReconnect": True,
+        "cameras": [
+            {"id": 1, "type": "usb", "name": "USB1", "device": str(device)},
+            {"id": 2, "type": "usb", "name": "USB2", "device": str(missing)},
+            {
+                "id": 3,
+                "type": "keyence",
+                "name": "Key",
+                "ip": "1.2.3.4",
+                "port": 8500,
+            },
+        ],
+    }
+    cfg.write_text(json.dumps(data))
+
+    manager = CameraManager(config_path=cfg)
+    statuses = manager.check_all_statuses()
+
+    assert {d["id"]: d["status"] for d in statuses} == {
+        1: "connected",
+        2: "disconnected",
+        3: "connected",
+    }
+    assert "Failed to connect camera 2" in caplog.text
