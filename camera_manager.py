@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict
+import logging
 
 from camera_config import load_camera_objects, Camera as CameraConfig
+from config_loader import ConfigLoader
 
 
 @dataclass
@@ -59,6 +61,9 @@ class CameraManager:
     """Manage multiple cameras defined in a configuration file."""
 
     def __init__(self, config_path: str | Path = "config/config.json") -> None:
+        loader = ConfigLoader(config_path)
+        config = loader.load_config()
+        self.auto_reconnect = bool(config.get("autoReconnect", False))
         configs = load_camera_objects(config_path)
         self.cameras: List[BaseCamera] = [self._create_camera(cfg) for cfg in configs]
 
@@ -88,3 +93,17 @@ class CameraManager:
             if cam.id == cam_id:
                 return cam
         return None
+
+    def check_all_statuses(self) -> List[Dict[str, str]]:
+        """Return status information for all cameras.
+
+        If ``auto_reconnect`` is enabled, attempt to reconnect any camera that
+        is not currently connected. Errors are logged when a connection fails.
+        """
+        statuses: List[Dict[str, str]] = []
+        for cam in self.cameras:
+            if cam.status != "connected" and self.auto_reconnect:
+                if not cam.connect():
+                    logging.error("Failed to connect camera %s", cam.id)
+            statuses.append({"id": cam.id, "status": cam.status})
+        return statuses
