@@ -30,6 +30,25 @@ manager = SerialMappingManager(config_path="config/config.json")
 manager.add_mapping("ZZ99", "ModelZ")
 ```
 
+## Model Selection API
+
+Convenience functions in ``model_api`` wrap the mapping manager and
+model selector for use in other modules.
+
+```python
+from model_api import (
+    select_model,
+    add_mapping,
+    remove_mapping,
+    reload_mapping,
+)
+
+reload_mapping("config/config.json")
+model = select_model("AB12XXXX")
+add_mapping("ZZ99", "ModelZ")
+remove_mapping("AB12")
+```
+
 ## Running Tests
 
 Run the unit tests with:
