@@ -1,0 +1,28 @@
+{
+  "cameras": [
+    {
+      "id": 1,
+      "type": "usb",
+      "name": "Camera1",
+      "device": "/dev/video0",
+      "resolution": "1920x1080"
+    },
+    {
+      "id": 2,
+      "type": "keyence",
+      "name": "Keyence1",
+      "ip": "192.168.0.10",
+      "port": 8500
+    }
+  ],
+  "serialMapping": {
+    "AB12": "ModelA",
+    "CD34": "ModelB",
+    "EF56": "ModelC"
+  },
+  "paths": {
+    "images": "/var/vision/images",
+    "logs": "/var/vision/logs",
+    "configs": "/var/vision/configs"
+  }
+}
