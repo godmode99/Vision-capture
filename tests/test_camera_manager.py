@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
@@ -136,3 +137,31 @@ def test_latest_image_helpers(tmp_path: Path):
     expected = out_dir / "SN_OK_20200102_030405.jpg"
     assert saved == expected
     assert saved.is_file()
+
+
+def test_disconnect_reconnect(tmp_path: Path):
+    cfg = create_config(tmp_path)
+    manager = CameraManager(config_path=cfg)
+    manager.connect_all()
+
+    assert manager.disconnect_camera(1) is True
+    assert manager.get_camera(1).status == "disconnected"
+
+    assert manager.reconnect_camera(1) is True
+    assert manager.get_camera(1).status == "connected"
+
+
+def test_parallel_reconnect(tmp_path: Path):
+    cfg = create_config(tmp_path)
+    manager = CameraManager(config_path=cfg)
+    manager.connect_all()
+
+    manager.disconnect_camera(1)
+    manager.disconnect_camera(2)
+
+    with ThreadPoolExecutor() as ex:
+        futures = [ex.submit(manager.reconnect_camera, cid) for cid in (1, 2)]
+        results = [f.result() for f in futures]
+
+    assert results == [True, True]
+    assert [cam.status for cam in manager.cameras] == ["connected", "connected"]
