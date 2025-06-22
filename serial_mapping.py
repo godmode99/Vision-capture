@@ -1,7 +1,8 @@
-"""Load serial prefix to model mapping from a JSON configuration."""
+"""Load and manage serial prefix to model mappings."""
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Dict, Mapping, Optional
 
@@ -76,4 +77,62 @@ class SerialModelMap:
 
     def as_dict(self) -> Dict[str, str]:
         return dict(self.mapping)
+
+
+class SerialMappingManager(SerialModelMap):
+    """Manage mappings persisted in a JSON config file.
+
+    Example
+    -------
+    >>> mgr = SerialMappingManager(config_path="config/config.json")
+    >>> mgr.add_mapping("ZZ99", "ModelZ")
+    'added'
+    """
+
+    def __init__(self, config_path: str | Path = "config/config.json") -> None:
+        self.config_path = Path(config_path)
+        loader = ConfigLoader(self.config_path)
+        self.config = loader.load_config()
+        mapping = self.config.get("serialMapping")
+        if mapping is None:
+            mapping = {}
+            self.config["serialMapping"] = mapping
+        if not isinstance(mapping, Mapping):
+            raise TypeError("'serialMapping' section must be a mapping")
+        super().__init__(mapping=mapping)
+
+    def _save(self) -> None:
+        self.config["serialMapping"] = self.mapping
+        with self.config_path.open("w", encoding="utf-8") as fh:
+            json.dump(self.config, fh, indent=2)
+
+    def add_mapping(self, prefix: str, model: str) -> str:
+        if prefix in self.mapping:
+            return "error: prefix exists"
+        self.mapping[prefix] = model
+        try:
+            self._save()
+        except OSError as exc:  # pragma: no cover - unlikely
+            return f"error: {exc}"
+        return "added"
+
+    def update_mapping(self, prefix: str, model: str) -> str:
+        if prefix not in self.mapping:
+            return "error: prefix not found"
+        self.mapping[prefix] = model
+        try:
+            self._save()
+        except OSError as exc:  # pragma: no cover - unlikely
+            return f"error: {exc}"
+        return "updated"
+
+    def remove_mapping(self, prefix: str) -> str:
+        if prefix not in self.mapping:
+            return "error: prefix not found"
+        del self.mapping[prefix]
+        try:
+            self._save()
+        except OSError as exc:  # pragma: no cover - unlikely
+            return f"error: {exc}"
+        return "removed"
 
