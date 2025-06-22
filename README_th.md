@@ -1,15 +1,12 @@
-# Vision Capture Utilities
+# ชุดเครื่องมือ Vision Capture
 
-[อ่านภาษาไทย](README_th.md)
+คอลเล็กชันโมดูลตัวช่วยขนาดเล็กสำหรับตั้งค่าและใช้งานระบบบันทึกภาพ
+ประกอบด้วยยูทิลิตีสำหรับโหลดการตั้งค่ากล้อง เลือกรุ่นตามหมายเลขซีเรียล
+และจัดการเส้นทางไฟล์ที่ระบุไว้ในไฟล์กำหนดค่า JSON
 
-A small collection of helper modules used to configure and operate a vision capture system.
-It includes utilities for loading camera settings, selecting a model based on a serial
-number, and handling filesystem paths described in a JSON configuration file.
+## การใช้งาน
 
-## Usage
-
-1. Ensure a `config/config.json` file exists. An example is provided in this
-   repository.
+1. ตรวจสอบให้แน่ใจว่ามีไฟล์ `config/config.json` ตัวอย่างมีให้ในรีโพซิทอรีนี้
 
 ```python
 from camera_config import load_cameras, validate_cameras
@@ -23,7 +20,7 @@ paths = load_paths()              # Access configured directories
 images_dir = paths["images"]
 ```
 
-## Editing Serial Mapping
+## แก้ไขแมปปิงหมายเลขซีเรียล
 
 ```python
 from serial_mapping import SerialMappingManager
@@ -32,10 +29,10 @@ manager = SerialMappingManager(config_path="config/config.json")
 manager.add_mapping("ZZ99", "ModelZ")
 ```
 
-## Model Selection API
+## API เลือกโมเดล
 
-Convenience functions in ``model_api`` wrap the mapping manager and
-model selector for use in other modules.
+ฟังก์ชันอำนวยความสะดวกใน ``model_api`` ครอบคลุมตัวจัดการแมปปิงและ
+ตัวเลือกโมเดลเพื่อใช้งานในโมดูลอื่น
 
 ```python
 from model_api import (
@@ -51,9 +48,9 @@ add_mapping("ZZ99", "ModelZ")
 remove_mapping("AB12")
 ```
 
-## Event Logger
+## ตัวบันทึกเหตุการณ์
 
-Keep a list of events in memory and export or reload them.
+เก็บรายการเหตุการณ์ไว้ในหน่วยความจำและส่งออกหรือนำกลับมาโหลดได้
 
 ```python
 from event_logger import EventLogger
@@ -74,9 +71,9 @@ df = logs_to_dataframe(logger.logs)
 html = logs_to_dataframe(logger.logs, as_html=True)
 ```
 
-## Screenshot Utility
+## ยูทิลิตีจับภาพหน้าจอ
 
-Capture desktop images using the :class:`ScreenCapture` class.
+จับภาพเดสก์ท็อปด้วยคลาส :class:`ScreenCapture`.
 
 ```python
 from screenshot import ScreenCapture
@@ -96,7 +93,7 @@ array = cap.capture(region=(0, 0, 300, 200), as_numpy=True)
 path = cap.capture(to_file=True)
 ```
 
-Use :func:`make_screenshot_name` to generate filenames for saved captures.
+ใช้ :func:`make_screenshot_name` เพื่อสร้างชื่อไฟล์สำหรับภาพที่บันทึก
 
 ```python
 from screenshot_namer import make_screenshot_name
@@ -104,7 +101,7 @@ from screenshot_namer import make_screenshot_name
 name = make_screenshot_name("SN123", "pass")
 ```
 
-Save one or more images with :func:`save_screenshot`::
+บันทึกรูปทีละหลายภาพด้วย :func:`save_screenshot`:
 
 ```python
 from screenshot import ScreenCapture, save_screenshot
@@ -115,9 +112,9 @@ for i in range(3):
     save_screenshot(img, "captures", f"shot_{i+1}.png")
 ```
 
-## Running Tests
+## รันการทดสอบ
 
-Run the unit tests with:
+รันการทดสอบหน่วยด้วยคำสั่ง:
 
 ```
 pytest -q
