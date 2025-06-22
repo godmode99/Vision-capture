@@ -1,4 +1,16 @@
-"""Simple event logging utility."""
+"""Simple event logging utility.
+
+Events are stored in memory and appended to ``file_path`` as JSON lines.  The
+log list can also be saved or loaded in CSV/JSON format.
+
+Example
+-------
+>>> logger = EventLogger("logs/events.txt")
+>>> logger.log_event("info", "started")
+>>> logger.save_log_json("logs/events.json")
+>>> logger.save_log_csv("logs/events.csv")
+>>> logger.load_log_json("logs/events.json")
+"""
 
 from __future__ import annotations
 
@@ -7,6 +19,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import json
+import csv
 
 
 @dataclass
@@ -60,3 +73,68 @@ class EventLogger:
         self.logs.append(entry)
         with self.file_path.open("a", encoding="utf-8") as f:
             f.write(json.dumps(asdict(entry)) + "\n")
+
+    def save_log_json(self, path: str | Path) -> None:
+        """Write all stored logs to ``path`` in JSON format."""
+        file = Path(path)
+        with file.open("w", encoding="utf-8") as fh:
+            json.dump([asdict(e) for e in self.logs], fh, indent=2)
+
+    def load_log_json(self, path: str | Path) -> None:
+        """Load log entries from a JSON file into memory.
+
+        Missing or invalid files result in an empty log list.
+        """
+        file = Path(path)
+        if not file.is_file():
+            self.logs = []
+            return
+        try:
+            with file.open("r", encoding="utf-8") as fh:
+                data = json.load(fh)
+            self.logs = [LogEntry(**d) for d in data]
+        except (json.JSONDecodeError, TypeError, KeyError):
+            self.logs = []
+
+    def save_log_csv(self, path: str | Path) -> None:
+        """Write all stored logs to ``path`` in CSV format."""
+        file = Path(path)
+        with file.open("w", newline="", encoding="utf-8") as fh:
+            writer = csv.DictWriter(
+                fh,
+                fieldnames=["timestamp", "event_type", "message", "metadata"],
+            )
+            writer.writeheader()
+            for entry in self.logs:
+                row = asdict(entry)
+                row["metadata"] = (
+                    json.dumps(row["metadata"]) if row["metadata"] is not None else ""
+                )
+                writer.writerow(row)
+
+    def load_log_csv(self, path: str | Path) -> None:
+        """Load log entries from a CSV file.
+
+        Missing or invalid files result in an empty log list.
+        """
+        file = Path(path)
+        if not file.is_file():
+            self.logs = []
+            return
+        try:
+            with file.open("r", newline="", encoding="utf-8") as fh:
+                reader = csv.DictReader(fh)
+                logs = []
+                for row in reader:
+                    meta = row.get("metadata") or "null"
+                    logs.append(
+                        LogEntry(
+                            timestamp=row.get("timestamp", ""),
+                            event_type=row.get("event_type", ""),
+                            message=row.get("message", ""),
+                            metadata=json.loads(meta),
+                        )
+                    )
+            self.logs = logs
+        except (csv.Error, json.JSONDecodeError, TypeError, KeyError):
+            self.logs = []
