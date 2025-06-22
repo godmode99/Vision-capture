@@ -138,3 +138,32 @@ class EventLogger:
             self.logs = logs
         except (csv.Error, json.JSONDecodeError, TypeError, KeyError):
             self.logs = []
+
+
+def logs_to_dataframe(logs: List[LogEntry], *, as_html: bool = False):
+    """Return a pandas DataFrame or HTML table for ``logs``.
+
+    Parameters
+    ----------
+    logs : list[LogEntry]
+        List of log entries to convert.
+    as_html : bool, optional
+        When ``True`` return an HTML table string instead of a
+        :class:`pandas.DataFrame`.
+
+    Returns
+    -------
+    pandas.DataFrame or str
+        DataFrame representing ``logs`` or HTML table string when
+        ``as_html`` is ``True``.
+    """
+
+    try:
+        import pandas as pd  # type: ignore
+    except Exception as exc:  # pragma: no cover - optional dependency
+        raise ImportError("pandas is required for logs_to_dataframe") from exc
+
+    df = pd.DataFrame([asdict(e) for e in logs])
+    if as_html:
+        return df.to_html(index=False)
+    return df
