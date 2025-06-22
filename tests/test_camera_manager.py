@@ -206,3 +206,27 @@ def test_parallel_reset(tmp_path: Path):
 
     assert results == [True, True]
     assert [cam.status for cam in manager.cameras] == ["connected", "connected"]
+
+
+def test_add_and_remove_camera(tmp_path: Path):
+    cfg = create_config(tmp_path)
+    manager = CameraManager(config_path=cfg)
+
+    dev = tmp_path / "video1"
+    dev.touch()
+    new_cfg = {"id": 3, "type": "usb", "name": "New", "device": str(dev)}
+
+    status = manager.add_camera(new_cfg)
+    assert status == "added"
+    assert manager.get_camera(3) is not None
+
+    error = manager.add_camera({"id": 4, "type": "usb", "name": "Bad"})
+    assert error.startswith("error")
+    assert manager.get_camera(4) is None
+
+    result = manager.remove_camera(3)
+    assert result == "removed"
+    assert manager.get_camera(3) is None
+
+    missing = manager.remove_camera(99)
+    assert missing.startswith("error")
