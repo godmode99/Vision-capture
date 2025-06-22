@@ -165,3 +165,44 @@ def test_parallel_reconnect(tmp_path: Path):
 
     assert results == [True, True]
     assert [cam.status for cam in manager.cameras] == ["connected", "connected"]
+
+
+def test_reset_camera(tmp_path: Path):
+    cfg = create_config(tmp_path)
+    manager = CameraManager(config_path=cfg)
+    manager.connect_all()
+
+    new_device = tmp_path / "video1"
+    new_device.touch()
+    assert manager.reset_camera(1, device=str(new_device)) is True
+    cam1 = manager.get_camera(1)
+    assert isinstance(cam1, USBCamera)
+    assert cam1.device == str(new_device)
+    assert cam1.status == "connected"
+
+    assert manager.reset_camera(2, port=8600) is True
+    cam2 = manager.get_camera(2)
+    assert isinstance(cam2, KeyenceCamera)
+    assert cam2.port == 8600
+    assert cam2.status == "connected"
+
+
+def test_parallel_reset(tmp_path: Path):
+    cfg = create_config(tmp_path)
+    manager = CameraManager(config_path=cfg)
+    manager.connect_all()
+
+    dev1 = tmp_path / "v1"
+    dev2 = tmp_path / "v2"
+    dev1.touch()
+    dev2.touch()
+
+    with ThreadPoolExecutor() as ex:
+        futures = [
+            ex.submit(manager.reset_camera, 1, device=str(dev1)),
+            ex.submit(manager.reset_camera, 2, port=8601),
+        ]
+        results = [f.result() for f in futures]
+
+    assert results == [True, True]
+    assert [cam.status for cam in manager.cameras] == ["connected", "connected"]

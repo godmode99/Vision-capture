@@ -138,6 +138,46 @@ class CameraManager:
             return False
         return self.connect_camera(cam_id)
 
+    def reset_camera(
+        self,
+        cam_id: int,
+        *,
+        device: str | None = None,
+        ip: str | None = None,
+        port: int | None = None,
+    ) -> bool:
+        """Reconnect ``cam_id`` updating its configuration if provided."""
+
+        cam = self.get_camera(cam_id)
+        if cam is None:
+            raise ValueError(f"Camera {cam_id} not found")
+
+        if not self.disconnect_camera(cam_id):
+            return False
+
+        try:
+            if isinstance(cam, USBCamera) and device is not None:
+                cam.device = device
+            elif isinstance(cam, KeyenceCamera):
+                if ip is not None:
+                    cam.ip = ip
+                if port is not None:
+                    cam.port = port
+        except Exception as exc:  # pragma: no cover - extremely unlikely
+            logging.error("Failed to update config for camera %s: %s", cam.id, exc)
+
+        try:
+            result = cam.connect()
+            if result:
+                logging.info("Reconnected camera %s", cam.id)
+            else:
+                logging.error("Failed to reconnect camera %s", cam.id)
+            return result
+        except Exception as exc:  # pragma: no cover - error path
+            logging.error("Failed to reconnect camera %s: %s", cam.id, exc)
+            cam.status = "disconnected"
+            return False
+
     def get_camera(self, cam_id: int) -> Optional[BaseCamera]:
         """Return camera instance with ``cam_id`` or ``None``."""
         for cam in self.cameras:
