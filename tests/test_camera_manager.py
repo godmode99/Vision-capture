@@ -86,3 +86,27 @@ def test_check_all_statuses(tmp_path: Path, caplog):
         3: "connected",
     }
     assert "Failed to connect camera 2" in caplog.text
+
+
+def test_capture_single_and_all(tmp_path: Path):
+    cfg = create_config(tmp_path)
+    manager = CameraManager(config_path=cfg)
+    manager.connect_all()
+
+    single = manager.capture_images(1)
+    assert set(single) == {1}
+    assert single[1] is not None and single[1].is_file()
+
+    all_caps = manager.capture_images()
+    assert set(all_caps) == {1, 2}
+    assert all(path is not None and path.is_file() for path in all_caps.values())
+
+
+def test_capture_error_handling(tmp_path: Path):
+    cfg = create_config(tmp_path)
+    manager = CameraManager(config_path=cfg)
+    manager.connect_camera(1)
+
+    results = manager.capture_images()
+    assert results[1] is not None
+    assert results[2] is None
