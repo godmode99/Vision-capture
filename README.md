@@ -64,6 +64,12 @@ logger.save_log_csv("events.csv")
 
 logger.load_log_json("events.json")
 logger.load_log_csv("events.csv")
+
+# Convert log list to a DataFrame or HTML table
+from event_logger import logs_to_dataframe
+
+df = logs_to_dataframe(logger.logs)
+html = logs_to_dataframe(logger.logs, as_html=True)
 ```
 
 ## Running Tests
