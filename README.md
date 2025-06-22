@@ -94,6 +94,14 @@ array = cap.capture(region=(0, 0, 300, 200), as_numpy=True)
 path = cap.capture(to_file=True)
 ```
 
+Use :func:`make_screenshot_name` to generate filenames for saved captures.
+
+```python
+from screenshot_namer import make_screenshot_name
+
+name = make_screenshot_name("SN123", "pass")
+```
+
 ## Running Tests
 
 Run the unit tests with:
