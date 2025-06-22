@@ -3,7 +3,13 @@ from pathlib import Path
 
 import pytest
 
-from camera_config import load_cameras, validate_cameras, get_camera_status
+from camera_config import (
+    load_cameras,
+    load_camera_objects,
+    validate_cameras,
+    get_camera_status,
+    Camera,
+)
 
 
 def test_load_cameras(tmp_path: Path):
@@ -41,4 +47,33 @@ def test_get_camera_status(tmp_path: Path):
 
     keyence = {"type": "keyence", "ip": "1.2.3.4", "port": 8500}
     assert get_camera_status(keyence) == "online"
+
+
+def test_load_camera_objects(tmp_path: Path):
+    cfg = tmp_path / "cfg.json"
+    data = {
+        "cameras": [
+            {
+                "id": 1,
+                "type": "usb",
+                "name": "Cam",
+                "device": "/dev/null",
+            },
+            {
+                "id": 2,
+                "type": "keyence",
+                "name": "Key",
+                "ip": "1.2.3.4",
+                "port": 8500,
+            },
+        ]
+    }
+    cfg.write_text(json.dumps(data))
+
+    cameras = load_camera_objects(cfg)
+    assert len(cameras) == 2
+    assert isinstance(cameras[0], Camera)
+    assert cameras[0].device == "/dev/null"
+    assert cameras[1].ip == "1.2.3.4"
+    assert cameras[1].port == 8500
 
