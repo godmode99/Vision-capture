@@ -33,6 +33,11 @@ class BaseCamera:
         """Capture an image and return the file path."""
         raise NotImplementedError
 
+    def disconnect(self) -> bool:  # pragma: no cover - base
+        """Disconnect the camera."""
+        self.status = "disconnected"
+        return True
+
 
 class USBCamera(BaseCamera):
     """Mock implementation of a USB camera."""
@@ -112,6 +117,26 @@ class CameraManager:
         if cam is None:
             raise ValueError(f"Camera {cam_id} not found")
         return cam.connect()
+
+    def disconnect_camera(self, cam_id: int) -> bool:
+        """Disconnect the camera with ``cam_id`` and return success."""
+        cam = self.get_camera(cam_id)
+        if cam is None:
+            raise ValueError(f"Camera {cam_id} not found")
+        try:
+            result = cam.disconnect()
+            logging.info("Disconnected camera %s", cam.id)
+            return result
+        except Exception as exc:  # pragma: no cover - error path
+            logging.error("Failed to disconnect camera %s: %s", cam.id, exc)
+            cam.status = "disconnected"
+            return False
+
+    def reconnect_camera(self, cam_id: int) -> bool:
+        """Disconnect then reconnect the camera with ``cam_id``."""
+        if not self.disconnect_camera(cam_id):
+            return False
+        return self.connect_camera(cam_id)
 
     def get_camera(self, cam_id: int) -> Optional[BaseCamera]:
         """Return camera instance with ``cam_id`` or ``None``."""
