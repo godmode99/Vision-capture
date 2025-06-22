@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 import logging
+import tempfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from camera_config import load_camera_objects, Camera as CameraConfig
 from config_loader import ConfigLoader
@@ -25,6 +27,10 @@ class BaseCamera:
         """Connect to the camera. Should be implemented by subclasses."""
         raise NotImplementedError
 
+    def capture(self) -> Path:  # pragma: no cover - base
+        """Capture an image and return the file path."""
+        raise NotImplementedError
+
 
 class USBCamera(BaseCamera):
     """Mock implementation of a USB camera."""
@@ -41,6 +47,15 @@ class USBCamera(BaseCamera):
             self.status = "disconnected"
         return self.status == "connected"
 
+    def capture(self) -> Path:
+        """Simulate capturing an image from a USB camera."""
+        if self.status != "connected":
+            raise RuntimeError("Camera not connected")
+        fd, path = tempfile.mkstemp(suffix=".jpg")
+        Path(path).write_bytes(b"usb image")
+        self.last_image = Path(path)
+        return Path(path)
+
 
 class KeyenceCamera(BaseCamera):
     """Mock implementation of a Keyence network camera."""
@@ -55,6 +70,15 @@ class KeyenceCamera(BaseCamera):
         # Real implementation would open a socket here. Always succeed for now.
         self.status = "connected"
         return True
+
+    def capture(self) -> Path:
+        """Simulate capturing an image from a Keyence camera."""
+        if self.status != "connected":
+            raise RuntimeError("Camera not connected")
+        fd, path = tempfile.mkstemp(suffix=".jpg")
+        Path(path).write_bytes(b"keyence image")
+        self.last_image = Path(path)
+        return Path(path)
 
 
 class CameraManager:
@@ -107,3 +131,39 @@ class CameraManager:
                     logging.error("Failed to connect camera %s", cam.id)
             statuses.append({"id": cam.id, "status": cam.status})
         return statuses
+
+    def capture_images(self, cam_id: Optional[int] = None) -> Dict[int, Optional[Path]]:
+        """Capture an image from one camera or all cameras.
+
+        Parameters
+        ----------
+        cam_id : int, optional
+            When provided, only the camera matching ``cam_id`` will be used.
+            When ``None``, all cameras are triggered.
+
+        Returns
+        -------
+        dict
+            Mapping of camera id to captured file path or ``None`` when the
+            capture failed.
+        """
+
+        if cam_id is not None:
+            cam = self.get_camera(cam_id)
+            if cam is None:
+                raise ValueError(f"Camera {cam_id} not found")
+            cameras = [cam]
+        else:
+            cameras = list(self.cameras)
+
+        results: Dict[int, Optional[Path]] = {}
+        with ThreadPoolExecutor() as executor:
+            future_map = {executor.submit(cam.capture): cam for cam in cameras}
+            for future in as_completed(future_map):
+                cam = future_map[future]
+                try:
+                    results[cam.id] = future.result()
+                except Exception as exc:  # pragma: no cover - error path
+                    logging.error("Failed to capture image from camera %s: %s", cam.id, exc)
+                    results[cam.id] = None
+        return results
