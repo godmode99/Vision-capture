@@ -102,6 +102,17 @@ from screenshot_namer import make_screenshot_name
 name = make_screenshot_name("SN123", "pass")
 ```
 
+Save one or more images with :func:`save_screenshot`::
+
+```python
+from screenshot import ScreenCapture, save_screenshot
+
+cap = ScreenCapture()
+for i in range(3):
+    img = cap.capture()
+    save_screenshot(img, "captures", f"shot_{i+1}.png")
+```
+
 ## Running Tests
 
 Run the unit tests with:

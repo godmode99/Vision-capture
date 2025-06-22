@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Tuple, Optional, Union
+from typing import Tuple, Optional, Union, Callable
 import tempfile
 
 try:
@@ -96,3 +96,53 @@ class ScreenCapture:
                 raise RuntimeError("NumPy is required for as_numpy=True")
             return np.array(image)
         return image
+
+
+def save_screenshot(
+    image: "Image.Image",
+    directory: str | Path,
+    filename: str,
+    *,
+    log_func: Callable[[str], object] | None = None,
+) -> Path:
+    """Save ``image`` to ``directory`` with ``filename``.
+
+    The directory is created when it does not already exist. Any failure
+    encountered while writing the file is logged via ``log_func`` when
+    provided and then re-raised.
+
+    Parameters
+    ----------
+    image : PIL.Image.Image
+        Screenshot image to save.
+    directory : str or Path
+        Destination directory for the image file.
+    filename : str
+        Name of the output file.
+    log_func : callable, optional
+        Function used to log errors. It receives the error message as a
+        single argument.
+
+    Returns
+    -------
+    pathlib.Path
+        Full path to the saved file.
+    """
+
+    dest = Path(directory)
+    try:
+        dest.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:  # pragma: no cover - unlikely in tests
+        if log_func:
+            log_func(f"Failed to create directory {dest}: {exc}")
+        raise
+
+    path = dest / filename
+    try:
+        image.save(path)
+    except OSError as exc:
+        if log_func:
+            log_func(f"Failed to save image to {path}: {exc}")
+        raise
+
+    return path
