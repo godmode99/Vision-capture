@@ -24,6 +24,14 @@ def test_validate_cameras_errors():
         validate_cameras([{"type": "unknown"}])
 
 
+def test_validate_cameras_length_errors():
+    with pytest.raises(ValueError):
+        validate_cameras([])
+    cams = [{"type": "usb", "device": "/dev/null"}] * 7
+    with pytest.raises(ValueError):
+        validate_cameras(cams)
+
+
 def test_get_camera_status(tmp_path: Path):
     device = tmp_path / "cam"
     device.touch()
@@ -33,3 +41,4 @@ def test_get_camera_status(tmp_path: Path):
 
     keyence = {"type": "keyence", "ip": "1.2.3.4", "port": 8500}
     assert get_camera_status(keyence) == "online"
+

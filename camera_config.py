@@ -20,6 +20,9 @@ def load_cameras(config_path: str | Path = "config/config.json") -> List[Dict]:
 
 def validate_cameras(cameras: List[Dict]) -> None:
     """Validate that each camera has required fields based on its type."""
+    if len(cameras) < 1 or len(cameras) > 6:
+        raise ValueError("Camera list must contain between 1 and 6 items")
+
     for camera in cameras:
         camera_type = camera.get("type")
         if camera_type == "usb":
