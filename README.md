@@ -72,6 +72,28 @@ df = logs_to_dataframe(logger.logs)
 html = logs_to_dataframe(logger.logs, as_html=True)
 ```
 
+## Screenshot Utility
+
+Capture desktop images using the :class:`ScreenCapture` class.
+
+```python
+from screenshot import ScreenCapture
+
+cap = ScreenCapture()
+
+# Full screen capture as a PIL image
+image = cap.capture()
+
+# Capture a specific window by its title
+window_image = cap.capture(window="Untitled - Notepad")
+
+# Capture a custom region and return a NumPy array
+array = cap.capture(region=(0, 0, 300, 200), as_numpy=True)
+
+# Save the capture to a temporary file
+path = cap.capture(to_file=True)
+```
+
 ## Running Tests
 
 Run the unit tests with:
