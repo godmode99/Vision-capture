@@ -4,8 +4,21 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import List, Dict
+from dataclasses import dataclass
 
 from config_loader import ConfigLoader
+
+
+@dataclass
+class Camera:
+    """Representation of a camera defined in configuration."""
+
+    id: int
+    type: str
+    name: str
+    device: str | None = None
+    ip: str | None = None
+    port: int | None = None
 
 
 def load_cameras(config_path: str | Path = "config/config.json") -> List[Dict]:
@@ -16,6 +29,22 @@ def load_cameras(config_path: str | Path = "config/config.json") -> List[Dict]:
     if not isinstance(cameras, list):
         raise TypeError("'cameras' section must be a list")
     return cameras
+
+
+def load_camera_objects(config_path: str | Path = "config/config.json") -> List[Camera]:
+    """Load camera configuration and return a list of :class:`Camera` objects."""
+    camera_dicts = load_cameras(config_path)
+    return [
+        Camera(
+            id=cam.get("id"),
+            type=cam.get("type"),
+            name=cam.get("name"),
+            device=cam.get("device"),
+            ip=cam.get("ip"),
+            port=cam.get("port"),
+        )
+        for cam in camera_dicts
+    ]
 
 
 def validate_cameras(cameras: List[Dict]) -> None:
