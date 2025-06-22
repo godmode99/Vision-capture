@@ -21,6 +21,15 @@ paths = load_paths()              # Access configured directories
 images_dir = paths["images"]
 ```
 
+## Editing Serial Mapping
+
+```python
+from serial_mapping import SerialMappingManager
+
+manager = SerialMappingManager(config_path="config/config.json")
+manager.add_mapping("ZZ99", "ModelZ")
+```
+
 ## Running Tests
 
 Run the unit tests with:
