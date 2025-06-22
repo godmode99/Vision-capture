@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 import logging
 import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
+import shutil
 
 from camera_config import load_camera_objects, Camera as CameraConfig
 from config_loader import ConfigLoader
@@ -167,3 +169,64 @@ class CameraManager:
                     logging.error("Failed to capture image from camera %s: %s", cam.id, exc)
                     results[cam.id] = None
         return results
+
+    def get_latest_image(
+        self, cam_id: int, *, as_array: bool = False
+    ) -> Optional[Union[Path, "np.ndarray"]]:
+        """Return the most recently captured image for ``cam_id``.
+
+        When ``as_array`` is ``True`` the image is returned as a NumPy array.
+        ``numpy`` and ``Pillow`` must be installed for this option.
+        ``None`` is returned when the camera has not captured an image.
+        """
+
+        cam = self.get_camera(cam_id)
+        if cam is None:
+            raise ValueError(f"Camera {cam_id} not found")
+
+        path = cam.last_image
+        if path is None or not Path(path).is_file():
+            return None
+
+        image_path = Path(path)
+        if not as_array:
+            return image_path
+
+        try:  # Lazy import only when needed
+            from PIL import Image
+            import numpy as np
+        except Exception as exc:  # pragma: no cover - optional dep
+            raise ImportError("numpy and Pillow are required for as_array") from exc
+
+        with Image.open(image_path) as img:
+            return np.array(img)
+
+    def save_latest_image(
+        self,
+        cam_id: int,
+        dest_dir: str | Path,
+        *,
+        serial: str | None = None,
+        status: str | None = None,
+        timestamp: datetime | None = None,
+    ) -> Path:
+        """Save the most recent image to ``dest_dir`` and return the path."""
+
+        image_path = self.get_latest_image(cam_id)
+        if image_path is None:
+            raise RuntimeError("No image available")
+
+        dest = Path(dest_dir)
+        dest.mkdir(parents=True, exist_ok=True)
+
+        if timestamp is None:
+            timestamp = datetime.now()
+        ts = timestamp.strftime("%Y%m%d_%H%M%S")
+
+        parts = [p for p in [serial, status, ts] if p]
+        filename = "_".join(parts) if parts else ts
+        filename += Path(image_path).suffix
+
+        final_path = dest / filename
+        shutil.copy(image_path, final_path)
+        return final_path
