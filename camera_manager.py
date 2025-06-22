@@ -12,6 +12,7 @@ from datetime import datetime
 import shutil
 
 from camera_config import load_camera_objects, Camera as CameraConfig
+from camera_config import validate_cameras
 from config_loader import ConfigLoader
 
 
@@ -177,6 +178,42 @@ class CameraManager:
             logging.error("Failed to reconnect camera %s: %s", cam.id, exc)
             cam.status = "disconnected"
             return False
+
+    def add_camera(self, config: Dict[str, object]) -> str:
+        """Validate *config*, create a camera, and add it to the manager."""
+
+        try:
+            validate_cameras([config])
+        except Exception as exc:  # pragma: no cover - validation error
+            return f"error: {exc}"
+
+        if any(cam.id == config.get("id") for cam in self.cameras):
+            return "error: camera id already exists"
+
+        try:
+            cfg = CameraConfig(
+                id=config.get("id"),
+                type=config.get("type"),
+                name=config.get("name"),
+                device=config.get("device"),
+                ip=config.get("ip"),
+                port=config.get("port"),
+            )
+            cam = self._create_camera(cfg)
+        except Exception as exc:  # pragma: no cover - creation error
+            return f"error: {exc}"
+
+        self.cameras.append(cam)
+        return "added"
+
+    def remove_camera(self, cam_id: int) -> str:
+        """Remove the camera with ``cam_id`` from the manager."""
+
+        for i, cam in enumerate(self.cameras):
+            if cam.id == cam_id:
+                self.cameras.pop(i)
+                return "removed"
+        return f"error: camera {cam_id} not found"
 
     def get_camera(self, cam_id: int) -> Optional[BaseCamera]:
         """Return camera instance with ``cam_id`` or ``None``."""
