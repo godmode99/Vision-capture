@@ -1,12 +1,14 @@
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QPushButton, QLabel, QLineEdit, QComboBox,
     QVBoxLayout, QHBoxLayout, QGridLayout, QTextEdit, QTableWidget,
-    QTableWidgetItem, QGroupBox, QStatusBar, QFileDialog
+    QTableWidgetItem, QGroupBox, QStatusBar, QFileDialog, QMessageBox
 )
 from PyQt5.QtCore import Qt, QTimer, QDateTime
 from PyQt5.QtGui import QPixmap
 
 import sys
+import datetime
+import os
 
 class VisionInspectionUI(QWidget):
     def __init__(self):
@@ -14,15 +16,18 @@ class VisionInspectionUI(QWidget):
         self.setWindowTitle("Protocol Vision IV4")
         self.setGeometry(200, 200, 800, 450)
         self.init_ui()
+        self.log_data = []
 
     def init_ui(self):
         # Camera Status Section
         cam_status_box = QGroupBox("Camera Status")
         cam_status_layout = QVBoxLayout()
         self.cam_labels = []
-        for i in range(1, 4):
-            lbl = QLabel(f"CAM #{i}: OFF")
-            lbl.setStyleSheet("color: gray;")
+        cam_status = ["OK", "NG", "OFF"]
+        cam_colors = ["green", "red", "gray"]
+        for i in range(3):
+            lbl = QLabel(f"CAM #{i+1}: {cam_status[i]}")
+            lbl.setStyleSheet(f"color: {cam_colors[i]};")
             self.cam_labels.append(lbl)
             cam_status_layout.addWidget(lbl)
         cam_status_box.setLayout(cam_status_layout)
@@ -33,6 +38,7 @@ class VisionInspectionUI(QWidget):
         self.serial_input = QLineEdit()
         self.serial_input.setPlaceholderText("Serial Input")
         detect_btn = QPushButton("Detect Model")
+        detect_btn.clicked.connect(self.handle_detect_model)
         self.model_label = QLabel("Model: -")
         serial_layout.addWidget(self.serial_input)
         serial_layout.addWidget(detect_btn)
@@ -43,7 +49,9 @@ class VisionInspectionUI(QWidget):
         control_box = QGroupBox("Control")
         control_layout = QVBoxLayout()
         self.trigger_btn = QPushButton("Trigger")
+        self.trigger_btn.clicked.connect(self.handle_trigger)
         self.auto_trigger_btn = QPushButton("Auto Trigger")
+        self.auto_trigger_btn.clicked.connect(self.handle_auto_trigger)
         self.auto_trigger_interval = QComboBox()
         self.auto_trigger_interval.addItems(["0 s", "1 s", "2 s", "5 s", "10 s"])
         control_layout.addWidget(self.trigger_btn)
@@ -64,14 +72,18 @@ class VisionInspectionUI(QWidget):
         # Screenshot/Save Section
         screenshot_box = QVBoxLayout()
         self.screenshot_btn = QPushButton("Screenshot")
+        self.screenshot_btn.clicked.connect(self.handle_screenshot)
         self.save_btn = QPushButton("Save")
+        self.save_btn.clicked.connect(self.handle_save)
         screenshot_box.addWidget(self.screenshot_btn)
         screenshot_box.addWidget(self.save_btn)
 
         # Register/Config
         reg_config_layout = QHBoxLayout()
         self.register_btn = QPushButton("Register Model")
+        self.register_btn.clicked.connect(self.handle_register_model)
         self.config_btn = QPushButton("Config")
+        self.config_btn.clicked.connect(self.handle_config)
         reg_config_layout.addWidget(self.register_btn)
         reg_config_layout.addWidget(self.config_btn)
 
@@ -88,6 +100,7 @@ class VisionInspectionUI(QWidget):
         # Export Log
         export_layout = QHBoxLayout()
         self.export_btn = QPushButton("Export Log")
+        self.export_btn.clicked.connect(self.handle_export_log)
         export_layout.addWidget(self.export_btn)
 
         # Status bar
@@ -108,14 +121,97 @@ class VisionInspectionUI(QWidget):
 
         self.setLayout(grid)
 
-        # Example event: update status camera 1 to OK
-        self.cam_labels[0].setText("CAM #1: OK")
-        self.cam_labels[0].setStyleSheet("color: green;")
-        self.cam_labels[1].setText("CAM #2: NG")
-        self.cam_labels[1].setStyleSheet("color: red;")
-        self.cam_labels[2].setText("CAM #3: OFF")
-        self.cam_labels[2].setStyleSheet("color: gray;")
-        # ใส่ event handler จริงเพิ่มเองได้เลย
+        # Timer สำหรับ Auto Trigger
+        self.auto_timer = QTimer()
+        self.auto_timer.timeout.connect(self.handle_trigger)
+
+    ### --- Event Handler Functions (ใส่ logic mock ทุกปุ่ม) ---
+
+    def handle_trigger(self):
+        serial = self.serial_input.text() or "N/A"
+        model = self.model_label.text().replace("Model: ", "")
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        status = "OK"  # สมมุติผลลัพธ์
+        # Mock: update preview image (สี random)
+        import random
+        color = random.choice(["#F88", "#8F8", "#88F", "#FF8", "#8FF", "#F8F"])
+        pix = QPixmap(240, 180)
+        pix.fill(Qt.transparent)
+        pix.fill(Qt.GlobalColor.black)
+        self.preview_label.setStyleSheet(f"background-color: {color};")
+        # Update History Table
+        row = self.history_table.rowCount()
+        self.history_table.insertRow(row)
+        self.history_table.setItem(row, 0, QTableWidgetItem(serial))
+        self.history_table.setItem(row, 1, QTableWidgetItem(model))
+        self.history_table.setItem(row, 2, QTableWidgetItem(now))
+        self.history_table.setItem(row, 3, QTableWidgetItem(status))
+        self.last_scan_label.setText(f"Last Scan: {now}")
+        self.log_data.append({"serial": serial, "model": model, "time": now, "status": status})
+        self.status.showMessage(f"Triggered! Serial: {serial} Model: {model}")
+
+    def handle_auto_trigger(self):
+        interval_text = self.auto_trigger_interval.currentText()
+        seconds = int(interval_text.split()[0])
+        if seconds == 0:
+            self.auto_timer.stop()
+            self.status.showMessage("Auto Trigger stopped.")
+        else:
+            self.auto_timer.start(seconds * 1000)
+            self.status.showMessage(f"Auto Trigger every {seconds} seconds.")
+
+    def handle_save(self):
+        # Mock: save to fake file
+        now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        serial = self.serial_input.text() or "N/A"
+        filename = f"{serial}_{now}.txt"
+        with open(filename, "w") as f:
+            f.write(f"Serial: {serial}\nTime: {now}\n")
+        self.status.showMessage(f"Saved {filename}")
+        QMessageBox.information(self, "Save", f"Saved file: {filename}")
+
+    def handle_export_log(self):
+        # Mock: export log as CSV
+        fname, _ = QFileDialog.getSaveFileName(self, "Export Log", "", "CSV Files (*.csv)")
+        if fname:
+            import csv
+            with open(fname, "w", newline="") as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=["serial", "model", "time", "status"])
+                writer.writeheader()
+                for row in self.log_data:
+                    writer.writerow(row)
+            self.status.showMessage(f"Exported log to {fname}")
+            QMessageBox.information(self, "Export Log", f"Exported log to:\n{fname}")
+
+    def handle_detect_model(self):
+        # Mock: อ่าน serial แล้วเดา model จาก 4 ตัวหน้า
+        serial = self.serial_input.text()
+        if not serial or len(serial) < 4:
+            self.model_label.setText("Model: -")
+            QMessageBox.warning(self, "Detect Model", "Serial ต้องมีอย่างน้อย 4 ตัวอักษร")
+            return
+        prefix = serial[:4].upper()
+        # สมมติ mapping (เปลี่ยนตามจริง)
+        model_map = {"A123": "IV3-2202", "B543": "IV2-3000"}
+        model = model_map.get(prefix, "Unknown")
+        self.model_label.setText(f"Model: {model}")
+        self.status.showMessage(f"Detected Model: {model}")
+
+    def handle_screenshot(self):
+        # Mock: สร้างรูป screenshot ปลอม
+        now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        fname = f"screenshot_{now}.png"
+        pix = QPixmap(self.preview_label.size())
+        self.preview_label.render(pix)
+        pix.save(fname)
+        self.status.showMessage(f"Screenshot saved: {fname}")
+        QMessageBox.information(self, "Screenshot", f"Screenshot saved:\n{fname}")
+
+    def handle_register_model(self):
+        QMessageBox.information(self, "Register Model", "ยังไม่ implement (mock)")
+
+    def handle_config(self):
+        QMessageBox.information(self, "Config", "ยังไม่ implement (mock)")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
