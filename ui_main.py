@@ -16,6 +16,9 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QMessageBox,
     QDialog,
+    QFormLayout,
+    QDialogButtonBox,
+
 )
 from PyQt5.QtCore import Qt, QTimer, QDateTime
 from PyQt5.QtGui import QPixmap
