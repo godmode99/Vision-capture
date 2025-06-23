@@ -37,7 +37,6 @@ class MainUI:
             borderwidth=1,
             relief="solid",
             width=40,
-            height=10,
         )
         self.image_label.pack(fill="both", expand=True, padx=10, pady=10)
 
