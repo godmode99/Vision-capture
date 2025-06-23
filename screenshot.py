@@ -86,9 +86,8 @@ class ScreenCapture:
         image = self._grab(box)
 
         if to_file:
-            tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
-            Path(tmp.name).write_bytes(image.tobytes())
-            image.save(tmp.name)
+            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+                image.save(tmp.name)
             return Path(tmp.name)
 
         if as_numpy:
