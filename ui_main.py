@@ -208,10 +208,10 @@ class VisionInspectionUI(QWidget):
         QMessageBox.information(self, "Screenshot", f"Screenshot saved:\n{fname}")
 
     def handle_register_model(self):
-        QMessageBox.information(self, "Register Model", "ยังไม่ implement (mock)")
+        QMessageBox.information(self, "Register Model")
 
     def handle_config(self):
-        QMessageBox.information(self, "Config", "ยังไม่ implement (mock)")
+        QMessageBox.information(self, "Config")
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
