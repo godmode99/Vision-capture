@@ -1,10 +1,27 @@
 from PyQt5.QtWidgets import (
-    QApplication, QWidget, QPushButton, QLabel, QLineEdit, QComboBox,
-    QVBoxLayout, QHBoxLayout, QGridLayout, QTextEdit, QTableWidget,
-    QTableWidgetItem, QGroupBox, QStatusBar, QFileDialog, QMessageBox
+    QApplication,
+    QWidget,
+    QPushButton,
+    QLabel,
+    QLineEdit,
+    QComboBox,
+    QVBoxLayout,
+    QHBoxLayout,
+    QGridLayout,
+    QTextEdit,
+    QTableWidget,
+    QTableWidgetItem,
+    QGroupBox,
+    QStatusBar,
+    QFileDialog,
+    QMessageBox,
+    QDialog,
 )
 from PyQt5.QtCore import Qt, QTimer, QDateTime
 from PyQt5.QtGui import QPixmap
+
+import model_api
+from register_model_dialog import RegisterModelDialog
 
 import sys
 import datetime
@@ -208,7 +225,14 @@ class VisionInspectionUI(QWidget):
         QMessageBox.information(self, "Screenshot", f"Screenshot saved:\n{fname}")
 
     def handle_register_model(self):
-        QMessageBox.information(self, "Register Model", "ยังไม่ implement (mock)")
+        dialog = RegisterModelDialog(self)
+        if dialog.exec_() == QDialog.Accepted:
+            prefix, model = dialog.get_data()
+            result = model_api.add_mapping(prefix, model)
+            if result == "added":
+                QMessageBox.information(self, "Register Model", f"Added mapping {prefix} -> {model}")
+            else:
+                QMessageBox.warning(self, "Register Model", result)
 
     def handle_config(self):
         QMessageBox.information(self, "Config", "ยังไม่ implement (mock)")
