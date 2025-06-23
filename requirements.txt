@@ -1,0 +1,6 @@
+numpy
+pillow
+mss
+pyautogui
+# Optional features use pandas
+pandas
