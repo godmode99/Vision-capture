@@ -27,6 +27,20 @@ import sys
 import datetime
 import os
 
+class RegisterModelDialog(QDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Register Model")
+        layout = QFormLayout(self)
+        self.prefix_input = QLineEdit()
+        self.model_input = QLineEdit()
+        layout.addRow("Serial Prefix (4 ตัว):", self.prefix_input)
+        layout.addRow("Model Name:", self.model_input)
+        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttons.accepted.connect(self.accept)
+        self.buttons.rejected.connect(self.reject)
+        layout.addWidget(self.buttons)
+
 class VisionInspectionUI(QWidget):
     def __init__(self):
         super().__init__()
