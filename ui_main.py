@@ -23,8 +23,6 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, QDateTime
 from PyQt5.QtGui import QPixmap
 
-import model_api
-from register_model_dialog import RegisterModelDialog
 
 import sys
 import datetime
