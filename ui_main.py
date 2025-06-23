@@ -225,9 +225,7 @@ class VisionInspectionUI(QWidget):
         QMessageBox.information(self, "Screenshot", f"Screenshot saved:\n{fname}")
 
     def handle_register_model(self):
-<<<<<<< HEAD
         QMessageBox.information(self, "Register Model")
-=======
         dialog = RegisterModelDialog(self)
         if dialog.exec_() == QDialog.Accepted:
             prefix, model = dialog.get_data()
@@ -236,7 +234,7 @@ class VisionInspectionUI(QWidget):
                 QMessageBox.information(self, "Register Model", f"Added mapping {prefix} -> {model}")
             else:
                 QMessageBox.warning(self, "Register Model", result)
->>>>>>> d0c19c890f16fe6e650b079b71218c69dd4c8b24
+
 
     def handle_config(self):
         QMessageBox.information(self, "Config")
