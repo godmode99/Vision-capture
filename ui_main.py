@@ -224,16 +224,24 @@ class VisionInspectionUI(QWidget):
         self.status.showMessage(f"Screenshot saved: {fname}")
         QMessageBox.information(self, "Screenshot", f"Screenshot saved:\n{fname}")
 
-    def handle_register_model(self):
-        QMessageBox.information(self, "Register Model")
-        dialog = RegisterModelDialog(self)
-        if dialog.exec_() == QDialog.Accepted:
-            prefix, model = dialog.get_data()
-            result = model_api.add_mapping(prefix, model)
-            if result == "added":
-                QMessageBox.information(self, "Register Model", f"Added mapping {prefix} -> {model}")
-            else:
-                QMessageBox.warning(self, "Register Model", result)
+def handle_register_model(self):
+    dialog = RegisterModelDialog(self)
+    if dialog.exec_() == QDialog.Accepted:
+        prefix = dialog.prefix_input.text().strip().upper()
+        model = dialog.model_input.text().strip()
+        if len(prefix) != 4 or not model:
+            QMessageBox.warning(self, "Error", "Serial Prefix ต้องมี 4 ตัวอักษร, Model ห้ามว่าง")
+            return
+        config_path = "config/config.json"
+        import json
+        with open(config_path, "r") as f:
+            config = json.load(f)
+        mapping = config.get("serial_mapping", {})
+        mapping[prefix] = model
+        config["serial_mapping"] = mapping
+        with open(config_path, "w") as f:
+            json.dump(config, f, indent=4)
+        QMessageBox.information(self, "Register Model", f"เพิ่ม mapping {prefix} → {model} สำเร็จ!")
 
 
     def handle_config(self):
