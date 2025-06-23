@@ -117,8 +117,9 @@ for i in range(3):
 
 ## Running Tests
 
-Run the unit tests with:
+Install the required dependencies and run the unit tests with:
 
-```
+```bash
+pip install -r requirements.txt
 pytest -q
 ```
