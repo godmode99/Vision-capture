@@ -1,6 +1,6 @@
 import builtins
 
-from serial_input import validate_serial, get_serial
+from serial_input import validate_serial, validate_prefix, get_serial
 
 
 def test_validate_serial():
@@ -10,6 +10,13 @@ def test_validate_serial():
     assert not validate_serial('abc')
     assert not validate_serial('a' * 21)
     assert not validate_serial('123$')
+
+
+def test_validate_prefix():
+    assert validate_prefix('AB12')
+    assert not validate_prefix('ABC')
+    assert not validate_prefix('ABCDE')
+    assert not validate_prefix('AB!2')
 
 
 def test_get_serial(monkeypatch):

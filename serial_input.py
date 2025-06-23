@@ -8,6 +8,11 @@ def validate_serial(serial: str) -> bool:
     return serial.isalnum() and 4 <= len(serial) <= 20
 
 
+def validate_prefix(prefix: str) -> bool:
+    """Return ``True`` if ``prefix`` is exactly 4 alphanumeric characters."""
+    return len(prefix) == 4 and prefix.isalnum()
+
+
 def get_serial(
     prompt: str = "Enter serial: ",
     *,
