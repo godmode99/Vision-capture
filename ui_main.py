@@ -27,6 +27,16 @@ from PyQt5.QtGui import QPixmap
 import sys
 import datetime
 import os
+import os
+import sys
+
+def get_config_path():
+    # รองรับรันจาก script ปกติ หรือ exe (pyinstaller)
+    if getattr(sys, 'frozen', False):
+        app_path = os.path.dirname(sys.executable)
+    else:
+        app_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(app_path, 'config', 'config.json')
 
 class RegisterModelDialog(QDialog):
     def __init__(self, parent=None):
@@ -239,24 +249,31 @@ class VisionInspectionUI(QWidget):
         self.status.showMessage(f"Screenshot saved: {fname}")
         QMessageBox.information(self, "Screenshot", f"Screenshot saved:\n{fname}")
 
-    def handle_register_model(self):
-        import json
-        dialog = RegisterModelDialog(self)
-        if dialog.exec_() == QDialog.Accepted:
-            prefix = dialog.prefix_input.text().strip().upper()
-            model = dialog.model_input.text().strip()
-            if len(prefix) != 4 or not model:
-                QMessageBox.warning(self, "Error", "Serial Prefix ต้องมี 4 ตัวอักษร, Model ห้ามว่าง")
-                return
-            config_path = "config/config.json"
+def handle_register_model(self):
+    import json
+    dialog = RegisterModelDialog(self)
+    if dialog.exec_() == QDialog.Accepted:
+        prefix = dialog.prefix_input.text().strip().upper()
+        model = dialog.model_input.text().strip()
+        if len(prefix) != 4 or not model:
+            QMessageBox.warning(self, "Error", "Serial Prefix ต้องมี 4 ตัวอักษร, Model ห้ามว่าง")
+            return
+        config_path = get_config_path()
+        try:
             with open(config_path, "r") as f:
                 config = json.load(f)
-            mapping = config.get("serial_mapping", {})
-            mapping[prefix] = model
-            config["serial_mapping"] = mapping
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"อ่าน config ไม่ได้: {e}")
+            return
+        mapping = config.get("serial_mapping", {})
+        mapping[prefix] = model
+        config["serial_mapping"] = mapping
+        try:
             with open(config_path, "w") as f:
                 json.dump(config, f, indent=4)
             QMessageBox.information(self, "Register Model", f"เพิ่ม mapping {prefix} → {model} สำเร็จ!")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"บันทึก config ไม่ได้: {e}")
 
 
     def handle_config(self):
