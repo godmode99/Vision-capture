@@ -249,11 +249,11 @@ class VisionInspectionUI(QWidget):
         self.status.showMessage(f"Screenshot saved: {fname}")
         QMessageBox.information(self, "Screenshot", f"Screenshot saved:\n{fname}")
 
-def handle_register_model(self):
-    import json
-    dialog = RegisterModelDialog(self)
-    if dialog.exec_() == QDialog.Accepted:
-        prefix = dialog.prefix_input.text().strip().upper()
+    def handle_register_model(self):
+        import json
+        dialog = RegisterModelDialog(self)
+        if dialog.exec_() == QDialog.Accepted:
+              prefix = dialog.prefix_input.text().strip().upper()
         model = dialog.model_input.text().strip()
         if len(prefix) != 4 or not model:
             QMessageBox.warning(self, "Error", "Serial Prefix ต้องมี 4 ตัวอักษร, Model ห้ามว่าง")
