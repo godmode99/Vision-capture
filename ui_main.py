@@ -277,6 +277,7 @@ class VisionInspectionUI(QWidget):
 
 
     def handle_config(self):
+        from PyQt5.QtWidgets import QMessageBox
         QMessageBox.information(self, "Config")
 
 if __name__ == '__main__':
