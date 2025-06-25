@@ -1,3 +1,6 @@
+import serial
+from PyQt5.QtCore import QThread, pyqtSignal
+
 from PyQt5.QtWidgets import (
     QApplication,
     QWidget,
@@ -37,6 +40,31 @@ def get_config_path():
     else:
         app_path = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(app_path, 'config', 'config.json')
+class SerialReaderThread(QThread):
+    received = pyqtSignal(str)
+
+    def __init__(self, port='COM3', baudrate=9600, parent=None):
+        super().__init__(parent)
+        self.port = port
+        self.baudrate = baudrate
+        self._running = True
+
+    def run(self):
+        try:
+            ser = serial.Serial(self.port, self.baudrate, timeout=1)
+        except Exception as e:
+            print(f"เปิดพอร์ตไม่ได้: {e}")
+            return
+        while self._running:
+            try:
+                line = ser.readline().decode('utf-8').strip()
+                if line:
+                    self.received.emit(line)
+            except Exception as e:
+                print(f"Serial Error: {e}")
+
+    def stop(self):
+        self._running = False
 
 class RegisterModelDialog(QDialog):
     def __init__(self, parent=None):
@@ -53,6 +81,9 @@ class RegisterModelDialog(QDialog):
         layout.addWidget(self.buttons)
 
 class VisionInspectionUI(QWidget):
+    def on_serial_received(self, line): 
+        self.serial_input.setText(line)
+    
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Protocol Vision IV4")
@@ -279,9 +310,17 @@ class VisionInspectionUI(QWidget):
     def handle_config(self):
         from PyQt5.QtWidgets import QMessageBox
         QMessageBox.information(self, "Config", "Test")
+        
+        
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     window = VisionInspectionUI()
     window.show()
     sys.exit(app.exec_())
+
+def closeEvent(self, event):
+    if hasattr(self, 'serial_thread'):
+        self.serial_thread.stop()
+        self.serial_thread.wait()
+    event.accept()
