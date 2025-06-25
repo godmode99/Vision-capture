@@ -136,20 +136,12 @@ class VisionInspectionUI(QWidget):
         self.log_data = []
 
     def init_ui(self):
-        # Camera Status Section
-        cam_status_box = QGroupBox("Camera Status")
-        cam_status_layout = QVBoxLayout()
-        self.cam_labels = []
-        cam_status = ["OK", "NG", "OFF"]
-        cam_colors = ["green", "red", "gray"]
-        for i in range(3):
-            lbl = QLabel(f"CAM #{i+1}: {cam_status[i]}")
-            lbl.setStyleSheet(f"color: {cam_colors[i]};")
-            self.cam_labels.append(lbl)
-            cam_status_layout.addWidget(lbl)
-        cam_status_box.setLayout(cam_status_layout)
-
-        # Serial/Model Section
+        main_layout = QVBoxLayout()
+        cam_models = ["IV2-1200", "IV3-2202", "IV4-3000"]
+        cam_statuses = ["OK", "NG", "OFF"]
+        self.cam_status_box = CameraStatusWidget(cam_models, cam_statuses)
+        main_layout.addWidget(self.cam_status_box)
+        
         serial_box = QGroupBox("Serial / Barcode")
         serial_layout = QVBoxLayout()
         self.serial_input = QLineEdit()
@@ -159,10 +151,9 @@ class VisionInspectionUI(QWidget):
         serial_layout.addWidget(QLabel("Select Port:"))
         serial_layout.addWidget(self.port_select)
         detect_btn = QPushButton("Detect Model")
-        detect_btn.clicked.connect(self.handle_detect_model)
-        self.model_label = QLabel("Model: -")
         serial_layout.addWidget(self.serial_input)
         serial_layout.addWidget(detect_btn)
+        self.model_label = QLabel("Model: -")
         serial_layout.addWidget(self.model_label)
         serial_box.setLayout(serial_layout)
 
@@ -230,7 +221,6 @@ class VisionInspectionUI(QWidget):
 
         # Layout Grid
         grid = QGridLayout()
-        grid.addWidget(cam_status_box, 0, 0)
         grid.addWidget(serial_box, 0, 1)
         grid.addWidget(control_box, 0, 2)
         grid.addWidget(preview_box, 1, 0)
