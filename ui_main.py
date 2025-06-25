@@ -1,6 +1,7 @@
 import serial
 from PyQt5.QtCore import QThread, pyqtSignal
 import serial.tools.list_ports
+from camera_manager import trigger_iv2_camera
 
 
 from PyQt5.QtWidgets import (
@@ -25,6 +26,7 @@ from PyQt5.QtWidgets import (
     QDialogButtonBox,
 
 )
+
 from PyQt5.QtCore import Qt, QTimer, QDateTime
 from PyQt5.QtGui import QPixmap
 
@@ -349,3 +351,16 @@ def closeEvent(self, event):
         self.serial_thread.stop()
         self.serial_thread.wait()
     event.accept()
+
+
+def handle_trigger(self):
+    ip = "192.168.0.10"  
+    try:
+        ok, raw = trigger_iv2_camera(ip)
+        if ok:
+            self.status.showMessage("Result: OK")
+        else:
+            self.status.showMessage("Result: NG")
+        print("Raw:", raw)
+    except Exception as e:
+        self.status.showMessage(f"Error: {e}")
