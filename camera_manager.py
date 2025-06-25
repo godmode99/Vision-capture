@@ -14,6 +14,22 @@ import shutil
 from camera_config import load_camera_objects, Camera as CameraConfig
 from camera_config import validate_cameras
 from config_loader import ConfigLoader
+from pycomm3 import CIPDriver
+
+def trigger_iv2_camera(ip):
+    INPUT_ASSEMBLY = 100
+    OUTPUT_ASSEMBLY = 101
+    INPUT_SIZE = 196
+    OUTPUT_SIZE = 6
+    with CIPDriver(ip) as plc:
+        # Trigger กล้อง
+        output_data = [0b00000001] + [0]*(OUTPUT_SIZE-1)
+        plc.write_array(f"Assembly[{OUTPUT_ASSEMBLY}]", output_data)
+        # อ่านผลลัพธ์
+        input_data = plc.read_array(f"Assembly[{INPUT_ASSEMBLY}]", INPUT_SIZE)
+        word4 = input_data[4]
+        overall_ok = bool(word4 & 0b00000001)
+        return overall_ok, input_data
 
 
 @dataclass
