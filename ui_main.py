@@ -1,5 +1,7 @@
 import serial
 from PyQt5.QtCore import QThread, pyqtSignal
+import serial.tools.list_ports
+
 
 from PyQt5.QtWidgets import (
     QApplication,
@@ -110,6 +112,10 @@ class VisionInspectionUI(QWidget):
         serial_layout = QVBoxLayout()
         self.serial_input = QLineEdit()
         self.serial_input.setPlaceholderText("Serial Input")
+        self.port_select = QComboBox()
+        self.refresh_ports()
+        serial_layout.addWidget(QLabel("Select Port:"))
+        serial_layout.addWidget(self.port_select)
         detect_btn = QPushButton("Detect Model")
         detect_btn.clicked.connect(self.handle_detect_model)
         self.model_label = QLabel("Model: -")
@@ -199,6 +205,24 @@ class VisionInspectionUI(QWidget):
         self.auto_timer.timeout.connect(self.handle_trigger)
 
     ### --- Event Handler Functions (ใส่ logic mock ทุกปุ่ม) ---
+    def refresh_ports(self):
+        import serial.tools.list_ports
+        ports = [port.device for port in serial.tools.list_ports.comports()]
+        self.port_select.clear()
+        self.port_select.addItems(ports)
+
+    def start_serial_thread(self):
+        port = self.port_select.currentText()
+        self.serial_thread = SerialReaderThread(port=port, baudrate=9600)
+        self.serial_thread.received.connect(self.on_serial_received)
+        self.serial_thread.start()
+        self.port_select.currentTextChanged.connect(self.restart_serial_thread)
+
+    def restart_serial_thread(self):
+        if hasattr(self, 'serial_thread'):
+           self.serial_thread.stop()
+           self.serial_thread.wait()
+           self.start_serial_thread()
 
     def handle_trigger(self):
         serial = self.serial_input.text() or "N/A"
@@ -226,7 +250,7 @@ class VisionInspectionUI(QWidget):
     def handle_auto_trigger(self):
         interval_text = self.auto_trigger_interval.currentText()
         seconds = int(interval_text.split()[0])
-        if seconds == 0:
+        if  seconds == 0:
             self.auto_timer.stop()
             self.status.showMessage("Auto Trigger stopped.")
         else:
