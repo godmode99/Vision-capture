@@ -208,6 +208,7 @@ class VisionInspectionUI(QWidget):
     def refresh_ports(self):
         import serial.tools.list_ports
         ports = [port.device for port in serial.tools.list_ports.comports()]
+        print("FOUND PORTS:", ports)
         self.port_select.clear()
         self.port_select.addItems(ports)
 
