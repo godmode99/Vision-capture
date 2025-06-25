@@ -137,6 +137,7 @@ class VisionInspectionUI(QWidget):
 
     def init_ui(self):
         main_layout = QVBoxLayout()
+         # --- Section Camera Status Widget ---
         cam_models = ["IV2-1200", "IV3-2202", "IV4-3000"]
         cam_statuses = ["OK", "NG", "OFF"]
         self.cam_status_box = CameraStatusWidget(cam_models, cam_statuses)
@@ -156,6 +157,8 @@ class VisionInspectionUI(QWidget):
         self.model_label = QLabel("Model: -")
         serial_layout.addWidget(self.model_label)
         serial_box.setLayout(serial_layout)
+        main_layout.addWidget(serial_box)
+
 
         # Control Section
         control_box = QGroupBox("Control")
@@ -218,9 +221,11 @@ class VisionInspectionUI(QWidget):
         # Status bar
         self.status = QStatusBar()
         self.status.showMessage("Connected x3   Error x0   NG x1")
+        
 
         # Layout Grid
         grid = QGridLayout()
+        grid.addWidget(self.cam_status_box, 0, 0)
         grid.addWidget(serial_box, 0, 1)
         grid.addWidget(control_box, 0, 2)
         grid.addWidget(preview_box, 1, 0)
@@ -231,10 +236,11 @@ class VisionInspectionUI(QWidget):
         grid.addWidget(self.status, 3, 0, 1, 3)
 
         self.setLayout(grid)
-
+        
         # Timer สำหรับ Auto Trigger
         self.auto_timer = QTimer()
         self.auto_timer.timeout.connect(self.handle_trigger)
+    
 
     ### --- Event Handler Functions (ใส่ logic mock ทุกปุ่ม) ---
     def refresh_ports(self):
