@@ -35,7 +35,47 @@ import sys
 import datetime
 import os
 import os
-import sys
+
+class CameraStatusWidget(QGroupBox):
+    def __init__(self, cam_models, cam_statuses, parent=None):
+        super().__init__("Camera Status", parent)
+        self.cam_models = cam_models      # list เช่น ["IV2-1200", "IV3-2202", "IV4-3000"]
+        self.cam_statuses = cam_statuses  # list เช่น ["OK", "NG", "OFF"]
+        self.colors = {"OK":"green", "NG":"red", "OFF":"gray", "ERROR":"orange"}
+
+        self.layout = QVBoxLayout()
+        self.cam_select = QComboBox()
+        self.cam_select.addItems([f"CAM #{i+1}" for i in range(len(cam_models))])
+        self.cam_select.currentIndexChanged.connect(self.update_display)
+
+        self.model_label = QLabel()
+        self.status_label = QLabel()
+
+        self.layout.addWidget(self.cam_select)
+        self.layout.addWidget(self.model_label)
+        self.layout.addWidget(self.status_label)
+        self.setLayout(self.layout)
+
+        self.update_display(0)  # โชว์กล้องตัวแรกก่อน
+
+    def update_display(self, idx):
+        model = self.cam_models[idx]
+        status = self.cam_statuses[idx]
+        color = self.colors.get(status, "black")
+        self.model_label.setText(f"Model: {model}")
+        self.status_label.setText(f"Status: {status}")
+        self.status_label.setStyleSheet(f"color: {color}; font-weight: bold;")
+        self.model_label.setStyleSheet("font-weight: bold;")
+    
+    # ฟังก์ชันอัปเดต status/model แบบ realtime
+    def set_status(self, idx, status):
+        self.cam_statuses[idx] = status
+        if self.cam_select.currentIndex() == idx:
+            self.update_display(idx)
+    def set_model(self, idx, model):
+        self.cam_models[idx] = model
+        if self.cam_select.currentIndex() == idx:
+            self.update_display(idx)
 
 def get_config_path():
     # รองรับรันจาก script ปกติ หรือ exe (pyinstaller)
