@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from camera_manager import CameraManager, USBCamera, KeyenceCamera
+from manager_cam import CameraManager, USBCamera, KeyenceCamera
 
 
 def create_config(tmp_path: Path) -> Path:
