@@ -1,8 +1,10 @@
+import sys, os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import serial
 from PyQt5.QtCore import QThread, pyqtSignal
 import serial.tools.list_ports
-import camera_manager
-from camera_manager import trigger_iv2_camera
+import manager_cam
+from manager_cam import trigger_iv2_camera
 
 
 from PyQt5.QtWidgets import (
