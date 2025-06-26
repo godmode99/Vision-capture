@@ -1,6 +1,7 @@
 import serial
 from PyQt5.QtCore import QThread, pyqtSignal
 import serial.tools.list_ports
+import camera_manager
 from camera_manager import trigger_iv2_camera
 
 
