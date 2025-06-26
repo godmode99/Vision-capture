@@ -1,9 +1,6 @@
-import sys, os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import serial
 from PyQt5.QtCore import QThread, pyqtSignal
 import serial.tools.list_ports
-import manager_cam
 from manager_cam import trigger_iv2_camera
 
 
@@ -403,4 +400,3 @@ def handle_trigger(self):
         print("Raw:", raw)
     except Exception as e:
         self.status.showMessage(f"Error: {e}")
-
