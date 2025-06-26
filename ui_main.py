@@ -400,3 +400,4 @@ def handle_trigger(self):
         print("Raw:", raw)
     except Exception as e:
         self.status.showMessage(f"Error: {e}")
+
