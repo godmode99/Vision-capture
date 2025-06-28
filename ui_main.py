@@ -128,6 +128,12 @@ class VisionInspectionUI(QWidget):
     def on_serial_received(self, line): 
         self.serial_input.setText(line)
     
+    def select_save_path(self):
+        path = QFileDialog.getExistingDirectory(self, "เลือกโฟลเดอร์เก็บไฟล์")
+        if path:
+         self.save_path = path
+         self.path_label.setText(f"Path: {path}")
+    
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Protocol Vision IV4")
@@ -192,6 +198,15 @@ class VisionInspectionUI(QWidget):
         self.save_btn.clicked.connect(self.handle_save)
         screenshot_box.addWidget(self.screenshot_btn)
         screenshot_box.addWidget(self.save_btn)
+
+        self.path_label = QLabel("Path: (ยังไม่ได้เลือก)")
+        self.select_path_btn = QPushButton("เลือก Path เก็บไฟล์")
+        self.select_path_btn.clicked.connect(self.select_save_path)
+        screenshot_box.addWidget(self.select_path_btn)
+        screenshot_box.addWidget(self.path_label)
+
+        self.save_path = ""
+
 
         # Register/Config
         reg_config_layout = QHBoxLayout()
@@ -297,14 +312,16 @@ class VisionInspectionUI(QWidget):
             self.status.showMessage(f"Auto Trigger every {seconds} seconds.")
 
     def handle_save(self):
-        # Mock: save to fake file
-        now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        serial = self.serial_input.text() or "N/A"
-        filename = f"{serial}_{now}.txt"
-        with open(filename, "w") as f:
-            f.write(f"Serial: {serial}\nTime: {now}\n")
-        self.status.showMessage(f"Saved {filename}")
-        QMessageBox.information(self, "Save", f"Saved file: {filename}")
+         now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+         serial = self.serial_input.text() or "N/A"
+         filename = f"{serial}_{now}.txt"
+         save_dir = self.save_path or os.getcwd()  # ถ้ายังไม่ได้เลือก ใช้ current dir
+         filepath = os.path.join(save_dir, filename)
+         with open(filepath, "w") as f:
+          f.write(f"Serial: {serial}\nTime: {now}\n")
+         self.status.showMessage(f"Saved {filepath}")
+         QMessageBox.information(self, "Save", f"Saved file: {filepath}")
+
 
     def handle_export_log(self):
         # Mock: export log as CSV
@@ -400,3 +417,5 @@ def handle_trigger(self):
         print("Raw:", raw)
     except Exception as e:
         self.status.showMessage(f"Error: {e}")
+ 
+
