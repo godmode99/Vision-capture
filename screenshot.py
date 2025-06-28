@@ -6,15 +6,9 @@ from pathlib import Path
 from typing import Tuple, Optional, Union, Callable
 import tempfile
 
-try:
-    from PIL import Image  # type: ignore
-except Exception as exc:  # pragma: no cover - pillow optional
-    raise ImportError("Pillow is required for screenshot functionality") from exc
-
-try:
-    import numpy as np  # type: ignore
-except Exception:  # pragma: no cover - numpy optional
-    np = None  # type: ignore
+from PIL import Image  # type: ignore    
+import numpy as np  # type: ignore
+    
 
 try:
     import mss  # type: ignore
@@ -51,13 +45,13 @@ class ScreenCapture:
 
     # Public API -------------------------------------------------------
     def capture(
-        self,
-        *,
-        window: Optional[str] = None,
-        region: Optional[Tuple[int, int, int, int]] = None,
-        as_numpy: bool = False,
-        to_file: bool = False,
-    ) -> Union[Image.Image, "np.ndarray", Path]:
+    self,
+    *,
+    window: Optional[str] = None,
+    region: Optional[Tuple[int, int, int, int]] = None,
+    as_numpy: bool = False,
+    to_file: bool = False,
+) -> Union[Image.Image, np.nadarray, Path]:
         """Capture the screen, a window, or a region.
 
         Parameters
