@@ -5,7 +5,7 @@ from __future__ import annotations
 import tkinter as tk
 
 from ui_main import MainUI
-from camera_manager import CameraManager
+from manager_cam import CameraManager
 from input_manager import InputManager
 from event_logger import EventLogger
 import model_api
