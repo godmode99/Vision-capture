@@ -74,7 +74,10 @@ from PyQt5.QtGui import QPixmap
 import sys
 import datetime
 import os
-import os
+import serial.tools.list_ports
+def is_usb_camera_connected(port_name):
+    ports = [p.device for p in serial.tools.list_ports.comports()]
+    return port_name in ports
 
 
 
@@ -128,10 +131,14 @@ class RegisterModelDialog(QDialog):
 class CameraMock:
     def __init__(self, id):
         self.id = id
+        self.connected = True
     def trigger(self):
         print(f"Camera {self.id} triggered")
+    def is_connected(self):
+        return self.id == 1
 
 class VisionInspectionUI(QWidget):
+
     def on_serial_received(self, line): 
         self.serial_input.setText(line)
    
@@ -173,12 +180,27 @@ class VisionInspectionUI(QWidget):
         self.setGeometry(200, 200, 800, 450)
         self.init_ui()
         self.log_data = []
+        self.status_timer = QTimer(self)
+        self.status_timer.timeout.connect(self.update_camera_status)
+        self.status_timer.start(1000)
+
+    def update_camera_status(self):
+        port = self.port_select.currentText()  # สมมุติเลือกพอร์ตใน UI หรือ mapping port จากกล้อง
+        if not port:   # ยังไม่ได้เลือก port หรือไม่มี port ในเครื่อง
+             status = "Disconnect"
+             color = "red"
+        else:
+             connected = is_usb_camera_connected(port)
+             status = "Connect" if connected else "Disconnect"
+             color = "green" if connected else "red"
+        self.cam_status_box.status_label.setText(f"Status: {status}")
+        self.cam_status_box.status_label.setStyleSheet(f"color: {color}; font-weight: bold;")
 
     def init_ui(self):
         main_layout = QVBoxLayout()
          # --- Section Camera Status Widget ---
-        cam_models = ["IV2-1200", "IV3-2202", "IV4-3000"]
-        cam_statuses = ["OK", "NG", "OFF"]
+        cam_models = ["IV2", "IV3", "IV4"]
+        cam_statuses = ["-", "-", "-"]
         self.cam_status_box = CameraStatusWidget(cam_models, cam_statuses)
         main_layout.addWidget(self.cam_status_box)
         
