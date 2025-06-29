@@ -129,10 +129,11 @@ class VisionInspectionUI(QWidget):
         self.serial_input.setText(line)
     
     def select_save_path(self):
-        path = QFileDialog.getExistingDirectory(self, "เลือกโฟลเดอร์เก็บไฟล์")
-        if path:
-         self.save_path = path
-         self.path_label.setText(f"Path: {path}")
+     from PyQt5.QtWidgets import QFileDialog
+     folder = QFileDialog.getExistingDirectory(self, "เลือกโฟลเดอร์เก็บไฟล์")
+     if folder:
+        self.save_path = folder
+        self.path_label.setText(f"Path: {folder}")
     
     def __init__(self):
         super().__init__()
@@ -312,15 +313,23 @@ class VisionInspectionUI(QWidget):
             self.status.showMessage(f"Auto Trigger every {seconds} seconds.")
 
     def handle_save(self):
-         now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-         serial = self.serial_input.text() or "N/A"
-         filename = f"{serial}_{now}.txt"
-         save_dir = self.save_path or os.getcwd()  # ถ้ายังไม่ได้เลือก ใช้ current dir
-         filepath = os.path.join(save_dir, filename)
-         with open(filepath, "w") as f:
-          f.write(f"Serial: {serial}\nTime: {now}\n")
-         self.status.showMessage(f"Saved {filepath}")
-         QMessageBox.information(self, "Save", f"Saved file: {filepath}")
+      import os
+      from PyQt5.QtWidgets import QMessageBox
+      now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+      serial = self.serial_input.text() or "N/A"
+      fname = f"{serial}_{now}.txt"
+      folder = self.save_path if self.save_path else ""
+      if not folder:
+        QMessageBox.warning(self, "Error", "ยังไม่ได้เลือก Path เก็บไฟล์")
+        return
+      fpath = os.path.join(folder, fname)
+      try:
+         with open(fpath, "w", encoding="utf-8") as f:
+            f.write(f"Serial: {serial}\nTime: {now}\n")
+         self.status.showMessage(f"Saved {fpath}")
+         QMessageBox.information(self, "Save", f"Saved file: {fpath}")
+      except Exception as e:
+        QMessageBox.critical(self, "Error", f"Save file failed: {e}")
 
 
     def handle_export_log(self):
@@ -351,14 +360,20 @@ class VisionInspectionUI(QWidget):
         self.status.showMessage(f"Detected Model: {model}")
 
     def handle_screenshot(self):
-        # Mock: สร้างรูป screenshot ปลอม
-        now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        fname = f"screenshot_{now}.png"
-        pix = QPixmap(self.preview_label.size())
-        self.preview_label.render(pix)
-        pix.save(fname)
-        self.status.showMessage(f"Screenshot saved: {fname}")
-        QMessageBox.information(self, "Screenshot", f"Screenshot saved:\n{fname}")
+     import os
+     from PyQt5.QtWidgets import QMessageBox
+     now = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+     fname = f"screenshot_{now}.png"
+     folder = self.save_path if self.save_path else ""
+     if not folder:
+        QMessageBox.warning(self, "Error", "ยังไม่ได้เลือก Path เก็บไฟล์")
+        return
+     fpath = os.path.join(folder, fname)
+     pix = QPixmap(self.preview_label.size())
+     self.preview_label.render(pix)
+     pix.save(fpath)
+     self.status.showMessage(f"Screenshot saved: {fpath}")
+     QMessageBox.information(self, "Screenshot", f"Screenshot saved:\n{fpath}")
 
     def handle_register_model(self):
         import json
