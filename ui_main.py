@@ -2,6 +2,7 @@ import serial
 from PyQt5.QtCore import QThread, pyqtSignal
 import serial.tools.list_ports
 from manager_cam import trigger_iv2_camera
+from threading import Thread
 
 
 from PyQt5.QtWidgets import (
@@ -124,9 +125,16 @@ class RegisterModelDialog(QDialog):
         self.buttons.rejected.connect(self.reject)
         layout.addWidget(self.buttons)
 
+class CameraMock:
+    def __init__(self, id):
+        self.id = id
+    def trigger(self):
+        print(f"Camera {self.id} triggered")
+
 class VisionInspectionUI(QWidget):
     def on_serial_received(self, line): 
         self.serial_input.setText(line)
+   
     
     def select_save_path(self):
      from PyQt5.QtWidgets import QFileDialog
@@ -134,9 +142,33 @@ class VisionInspectionUI(QWidget):
      if folder:
         self.save_path = folder
         self.path_label.setText(f"Path: {folder}")
+
+    def trigger_all_cameras(self):
+        print("DEBUG: cameras in trigger", self.cameras)
+        from threading import Thread
+        import traceback
+        threads = []
+        def run_trigger(cam):
+            try:
+                print(f"TRIGGER: {cam}")
+                cam.trigger()
+            except Exception as e:
+                print(f"Camera {cam} error: {e}")
+                traceback.print_exc()
+        print("CAM LIST:", self.cameras)
+        for cam in self.cameras:
+            t = Thread(target=run_trigger, args=(cam,))
+            t.start()
+            threads.append(t)
+        for t in threads:
+            t.join()
+        self.status.showMessage("Trigger All Done!")
+   
     
     def __init__(self):
         super().__init__()
+        self.cameras = [CameraMock(1), CameraMock(2)]
+        print("DEBUG: cameras initialized", self.cameras)
         self.setWindowTitle("Protocol Vision IV4")
         self.setGeometry(200, 200, 800, 450)
         self.init_ui()
@@ -181,6 +213,9 @@ class VisionInspectionUI(QWidget):
         control_layout.addWidget(QLabel("Auto Trigger"))
         control_layout.addWidget(self.auto_trigger_interval)
         control_box.setLayout(control_layout)
+        self.trigger_all_btn = QPushButton("Trigger All")
+        self.trigger_all_btn.clicked.connect(self.trigger_all_cameras)
+        control_layout.addWidget(self.trigger_all_btn)
 
         # Camera Preview Section
         preview_box = QGroupBox("Camera Preview")
@@ -432,5 +467,7 @@ def handle_trigger(self):
         print("Raw:", raw)
     except Exception as e:
         self.status.showMessage(f"Error: {e}")
- 
+
+
+
 
