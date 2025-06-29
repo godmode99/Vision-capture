@@ -293,7 +293,7 @@ class VisionInspectionUI(QWidget):
 
         # Status bar
         self.status = QStatusBar()
-        self.status.showMessage("Connected x3   Error x0   NG x1")
+        self.status.showMessage("")
         
 
         # Layout Grid
@@ -436,27 +436,27 @@ class VisionInspectionUI(QWidget):
         import json
         dialog = RegisterModelDialog(self)
         if dialog.exec_() == QDialog.Accepted:
-              prefix = dialog.prefix_input.text().strip().upper()
-        model = dialog.model_input.text().strip()
-        if len(prefix) != 4 or not model:
-            QMessageBox.warning(self, "Error", "Serial Prefix ต้องมี 4 ตัวอักษร, Model ห้ามว่าง")
-            return
-        config_path = get_config_path()
-        try:
-            with open(config_path, "r") as f:
-                config = json.load(f)
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"อ่าน config ไม่ได้: {e}")
-            return
-        mapping = config.get("serial_mapping", {})
-        mapping[prefix] = model
-        config["serial_mapping"] = mapping
-        try:
-            with open(config_path, "w") as f:
-                json.dump(config, f, indent=4)
-            QMessageBox.information(self, "Register Model", f"เพิ่ม mapping {prefix} → {model} สำเร็จ!")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"บันทึก config ไม่ได้: {e}")
+           prefix = dialog.prefix_input.text().strip().upper()
+           model = dialog.model_input.text().strip()
+           if len(prefix) != 4 or not model:
+                QMessageBox.warning(self, "Error", "Serial Prefix ต้องมี 4 ตัวอักษร, Model ห้ามว่าง")
+                return
+           config_path = get_config_path()
+           try:
+                with open(config_path, "r") as f:
+                  config = json.load(f)
+           except Exception as e:
+                QMessageBox.critical(self, "Error", f"อ่าน config ไม่ได้: {e}")
+                return
+           mapping = config.get("serial_mapping", {})
+           mapping[prefix] = model
+           config["serial_mapping"] = mapping
+           try:
+               with open(config_path, "w") as f:
+                    json.dump(config, f, indent=4)
+                    QMessageBox.information(self, "Register Model", f"เพิ่ม mapping {prefix} → {model} สำเร็จ!")
+           except Exception as e:
+                    QMessageBox.critical(self, "Error", f"บันทึก config ไม่ได้: {e}")
 
 
     def handle_config(self):
